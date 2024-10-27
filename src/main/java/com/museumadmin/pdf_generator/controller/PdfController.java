@@ -1,5 +1,6 @@
 package com.museumadmin.pdf_generator.controller;
 
+
 import com.museumadmin.pdf_generator.service.PdfGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -18,14 +20,19 @@ public class PdfController {
     private PdfGeneratorService pdfGeneratorService;
 
     @PostMapping("/generate-pdf")
-    public ResponseEntity<byte[]> generatePdf(@RequestBody Map<String, String> requestData) {
-        String title = requestData.get("title");
-        String content = requestData.get("content");
-        byte[] pdfBytes = pdfGeneratorService.createPdf(title, content);
+    public ResponseEntity<byte[]> generatePdf(@RequestBody Map<String, String> request) {
+        String title = request.get("title");
+        String content = request.get("content");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "generated.pdf");
-        return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        try {
+            byte[] pdfBytes = pdfGeneratorService.createPdf(title, content);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "generated.pdf");
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(null); // Handle the error appropriately
+        }
     }
 }
